@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Slack Emoji Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="number"], select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px 5px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .preview-container {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8f8f8;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        #preview {
+            display: inline-block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .preview-label {
+            margin-bottom: 15px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .frame-preview {
+            display: inline-block;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .frames-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .frames-label {
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .progress.active {
+            display: block;
+        }
+
+        .download-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 10px;
+            text-align: center;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 10px;
+            color: #c00;
+            text-align: center;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .success-message {
+            background: #efe !important;
+            border-color: #cfc !important;
+            color: #080 !important;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+            display: none;
+        }
+
+        .debug-info.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌈 Rainbow Slack Emoji Generator</h1>
+        <p class="subtitle">7色に光るアニメーション絵文字を作成</p>
+
+        <div class="input-group">
+            <label for="text-input">テキスト（改行対応）:</label>
+            <textarea id="text-input" placeholder="ここに文字を入力&#10;改行もOK！">虹色&#10;絵文字</textarea>
+        </div>
+
+        <div class="controls">
+            <div class="control-item">
+                <label for="font-size">フォントサイズ:</label>
+                <input type="number" id="font-size" value="48" min="10" max="128">
+            </div>
+            <div class="control-item">
+                <label for="font-family">フォント:</label>
+                <select id="font-family">
+                    <option value="Arial">Arial</option>
+                    <option value="'Helvetica Neue', Helvetica">Helvetica</option>
+                    <option value="sans-serif">Sans-serif</option>
+                    <option value="Impact">Impact</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="monospace">等幅フォント</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label for="animation-speed">アニメーション速度 (ms):</label>
+                <input type="number" id="animation-speed" value="100" min="50" max="500" step="50">
+            </div>
+            <div class="control-item">
+                <label for="bg-color">背景色:</label>
+                <input type="color" id="bg-color" value="#ffffff">
+            </div>
+            <div class="control-item">
+                <label for="repeat">ループ回数:</label>
+                <select id="repeat">
+                    <option value="0">無限ループ</option>
+                    <option value="1">1回</option>
+                    <option value="3">3回</option>
+                    <option value="5">5回</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="generate-btn">GIF生成</button>
+            <button id="download-btn" disabled>ダウンロード</button>
+        </div>
+
+        <div class="progress">
+            <p>⏳ GIF生成中... しばらくお待ちください</p>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="debug-info" id="debug-info"></div>
+
+        <div class="preview-container">
+            <div class="preview-label">アニメーションプレビュー</div>
+            <canvas id="preview" width="128" height="128"></canvas>
+        </div>
+
+        <div class="frames-container" id="frames-container" style="display: none;">
+            <div class="frames-label">生成されたフレーム（7色）</div>
+            <div id="frames-list"></div>
+        </div>
+
+        <div class="download-info">
+            💡 生成されたGIFはSlackのカスタム絵文字として使用できます（128x128px）<br>
+            📝 テキストを変更後は「GIF生成」ボタンを押してください
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- GIF.jsライブラリ -->
+    <script src="gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const previewCanvas = document.getElementById('preview');
+        const previewCtx = previewCanvas.getContext('2d');
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const progress = document.querySelector('.progress');
+        const errorMessage = document.getElementById('error-message');
+        const debugInfo = document.getElementById('debug-info');
+        const framesContainer = document.getElementById('frames-container');
+        const framesList = document.getElementById('frames-list');
+        
+        let generatedGif = null;
+        let animationInterval = null;
+        let frames = [];
+
+        // 虹色の7色
+        const rainbowColors = [
+            '#FF0000', // 赤
+            '#FF7F00', // オレンジ
+            '#FFFF00', // 黄
+            '#00FF00', // 緑
+            '#0000FF', // 青
+            '#4B0082', // 藍
+            '#9400D3'  // 紫
+        ];
+
+        function drawTextFrame(text, fontSize, fontFamily, color, bgColor) {
+            const padding = 20;
+            
+            // キャンバスサイズを設定
+            canvas.width = 128;
+            canvas.height = 128;
+            
+            // 背景をクリア＆塗りつぶし
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // テキストを測定
+            ctx.font = `bold ${fontSize}px ${fontFamily}`;
+            const lines = text.split('\n');
+            let maxWidth = 0;
+            let totalHeight = 0;
+            
+            lines.forEach((line) => {
+                const metrics = ctx.measureText(line);
+                if (metrics.width > maxWidth) maxWidth = metrics.width;
+                totalHeight += fontSize * 1.2;
+            });
+            
+            // スケール計算
+            const scale = Math.min(
+                (canvas.width - padding * 2) / maxWidth,
+                (canvas.height - padding * 2) / totalHeight,
+                1
+            );
+            
+            const scaledFontSize = Math.floor(fontSize * scale);
+            ctx.font = `bold ${scaledFontSize}px ${fontFamily}`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = color;
+            
+            // テキストを描画
+            const lineHeight = scaledFontSize * 1.2;
+            const startY = (canvas.height - (lines.length * lineHeight)) / 2 + lineHeight / 2;
+            
+            lines.forEach((line, index) => {
+                ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+            });
+            
+            // ImageDataとして取得（より確実）
+            return ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        function startAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+            
+            const animationSpeed = parseInt(document.getElementById('animation-speed').value);
+            let currentFrame = 0;
+            
+            const animate = () => {
+                if (frames[currentFrame]) {
+                    previewCtx.putImageData(frames[currentFrame], 0, 0);
+                }
+                currentFrame = (currentFrame + 1) % frames.length;
+            };
+            
+            animate();
+            animationInterval = setInterval(animate, animationSpeed);
+        }
+
+        async function generateGif() {
+            try {
+                progress.classList.add('active');
+                errorMessage.classList.remove('active');
+                debugInfo.classList.remove('active');
+                generateBtn.disabled = true;
+                downloadBtn.disabled = true;
+                
+                const text = document.getElementById('text-input').value || '虹色\n絵文字';
+                const fontSize = parseInt(document.getElementById('font-size').value);
+                const fontFamily = document.getElementById('font-family').value;
+                const bgColor = document.getElementById('bg-color').value;
+                const animationSpeed = parseInt(document.getElementById('animation-speed').value);
+                const repeat = parseInt(document.getElementById('repeat').value);
+                
+                // フレームを生成
+                frames = [];
+                framesList.innerHTML = '';
+                
+                // 各色のフレームを作成
+                for (let i = 0; i < rainbowColors.length; i++) {
+                    const imageData = drawTextFrame(text, fontSize, fontFamily, rainbowColors[i], bgColor);
+                    frames.push(imageData);
+                    
+                    // プレビュー用の画像を作成
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 128;
+                    tempCanvas.height = 128;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.putImageData(imageData, 0, 0);
+                    
+                    const img = document.createElement('img');
+                    img.src = tempCanvas.toDataURL();
+                    img.className = 'frame-preview';
+                    img.width = 64;
+                    img.height = 64;
+                    img.title = `Frame ${i + 1}`;
+                    framesList.appendChild(img);
+                }
+                
+                framesContainer.style.display = 'block';
+                startAnimation();
+                
+                // GIF生成
+                console.log('Creating GIF with', frames.length, 'frames');
+                
+                const gif = new GIF({
+                    workers: 2,
+                    quality: 10,
+                    width: 128,
+                    height: 128,
+                    repeat: repeat, // ループ設定
+                    transparent: null,
+                    background: '#FFFFFF'
+                });
+                
+                // 各フレームを追加（ImageDataを使用）
+                for (let i = 0; i < frames.length; i++) {
+                    // ImageDataをCanvasに描画
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 128;
+                    tempCanvas.height = 128;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.putImageData(frames[i], 0, 0);
+                    
+                    // Canvasとして追加
+                    gif.addFrame(tempCtx, {
+                        delay: animationSpeed,
+                        copy: true
+                    });
+                    
+                    console.log(`Added frame ${i + 1}/${frames.length}`);
+                }
+                
+                gif.on('finished', function(blob) {
+                    console.log('GIF generated, size:', blob.size, 'bytes');
+                    generatedGif = blob;
+                    progress.classList.remove('active');
+                    generateBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                    
+                    // 成功メッセージ
+                    errorMessage.textContent = '✅ アニメーションGIFの生成が完了しました！ダウンロードボタンをクリックしてください。';
+                    errorMessage.classList.add('active', 'success-message');
+                    
+                    // デバッグ情報
+                    debugInfo.innerHTML = `
+                        <strong>生成情報:</strong><br>
+                        フレーム数: ${frames.length}<br>
+                        各フレーム遅延: ${animationSpeed}ms<br>
+                        ファイルサイズ: ${(blob.size / 1024).toFixed(2)} KB<br>
+                        ループ: ${repeat === 0 ? '無限' : repeat + '回'}
+                    `;
+                    debugInfo.classList.add('active');
+                });
+                
+                gif.on('progress', function(p) {
+                    progress.innerHTML = `<p>⏳ GIF生成中... ${Math.round(p * 100)}%</p>`;
+                });
+                
+                console.log('Starting GIF render...');
+                gif.render();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                progress.classList.remove('active');
+                generateBtn.disabled = false;
+                
+                errorMessage.textContent = '❌ エラー: ' + error.message;
+                errorMessage.classList.add('active');
+                errorMessage.classList.remove('success-message');
+            }
+        }
+
+        function downloadGif() {
+            if (!generatedGif) {
+                alert('GIFがまだ生成されていません。');
+                return;
+            }
+            
+            const url = URL.createObjectURL(generatedGif);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rainbow-emoji-${Date.now()}.gif`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // イベントリスナー
+        generateBtn.addEventListener('click', generateGif);
+        downloadBtn.addEventListener('click', downloadGif);
+        
+        // 初期生成
+        window.addEventListener('load', () => {
+            setTimeout(generateGif, 500);
+        });
+    </script>
+</body>
+</html>
