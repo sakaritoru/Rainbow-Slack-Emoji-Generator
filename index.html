@@ -349,7 +349,7 @@
         ];
 
         function drawTextFrame(text, fontSize, fontFamily, color, bgColor) {
-            const padding = 20;
+            const padding = 5; // パディングを大幅に削減してフレームギリギリまで使用
             
             // キャンバスサイズを設定
             canvas.width = 128;
@@ -369,10 +369,10 @@
             lines.forEach((line) => {
                 const metrics = ctx.measureText(line);
                 if (metrics.width > maxWidth) maxWidth = metrics.width;
-                totalHeight += fontSize * 1.2;
+                totalHeight += fontSize * 1.1; // 行間もより詰める
             });
             
-            // スケール計算
+            // スケール計算 - より大きなサイズになるように調整
             const scale = Math.min(
                 (canvas.width - padding * 2) / maxWidth,
                 (canvas.height - padding * 2) / totalHeight,
@@ -386,7 +386,7 @@
             ctx.fillStyle = color;
             
             // テキストを描画
-            const lineHeight = scaledFontSize * 1.2;
+            const lineHeight = scaledFontSize * 1.1; // 行間をより詰める
             const startY = (canvas.height - (lines.length * lineHeight)) / 2 + lineHeight / 2;
             
             lines.forEach((line, index) => {
